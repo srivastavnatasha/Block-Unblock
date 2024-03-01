@@ -1,0 +1,45 @@
+## Blocking the MAC address######## 
+###########APAC region##############
+#- name: starting of the playbook
+- block:
+
+ - name: Adding MAC to policy in APAC region(first block)
+   uri:
+     url: https://***********************/ers/config/ancendpoint/apply
+     user: "{{ Iseusername }}"
+     password: "{{ IsePassword }}"
+   method: PUT
+   headers:
+   Content-Type: application/json
+   Accept: application/json
+   body: 
+'{"OperationAdditionalData":{"additionalData":[{"name":"macAddress","value"
+:"{{item | string }}"},{"name":"policyName","value":"Block_Access"}]}}'
+   force_basic_auth: yes
+   validate_certs: no
+   status_code: 200,201,202,204
+   register: responseISE
+ 
+ rescue:
+   - debug:
+       msg: "Primary API is not working so using secondary API in APAC 
+region(first rescue)"
+   - set_fact:
+      newvar : "{{ responseISE.msg }}"
+   - uri:
+      url: https://*****************/ers/config/ancendpoint/apply
+      user: "{{ Iseusername }}"
+      password: "{{ IsePassword }}"
+     method: PUT
+     headers:
+     Content-Type: application/json
+     Accept: application/json
+     body: 
+'{"OperationAdditionalData":{"additionalData":[{"name":"macAddress","value"
+:"{{item | string }}"},{"name":"policyName","value":"Block_Access"}]}}'
+     force_basic_auth: yes
+     validate_certs: no
+     status_code: 200,201,202,204
+     register: responseISE
+   when: ("Status code was -1" not in newvar)
+ ignore_errors: yes
